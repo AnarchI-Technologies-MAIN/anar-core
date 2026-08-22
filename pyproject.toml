@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools==83.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anar-core"
+version = "0.1.0"
+description = "AnarchI identity and current-authority kernel"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "argon2-cffi>=23.1.0,<26",
+]
+
+[tool.setuptools]
+packages = ["anar_core", "anar_core_contracts"]
