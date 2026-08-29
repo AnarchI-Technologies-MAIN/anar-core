@@ -1,0 +1,12 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-012",
+  "observation": "The durable authority packet's input_corpus_manifest covered only fixtures/postgres even though the repository also contained conformance and adversarial specimens required for evidence-first review.",
+  "affected_invariant": "Every fixture byte used or available to the rehearsal corpus must be digest-bound, while expected outcomes remain undisclosed to the independent reviewer.",
+  "result": "PACKET_CORPUS_MANIFEST_INCOMPLETE_REHEARSAL_NOT_AUTHORIZATION",
+  "observed_run_id": "anar-core-phase0-postgres-20260829T161730Z-e7abaffb",
+  "correction": "Changed the runner corpus root to fixtures/, recursively hash every fixture file, and emit a versioned structured manifest containing source digests and undisclosed case identifiers without embedding expected answers.",
+  "regression_assertion": "A durable packet must include every file under fixtures/ in evidence_hashes and source_digests; the offline verifier must resolve all of them from the packet's repository commit.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}

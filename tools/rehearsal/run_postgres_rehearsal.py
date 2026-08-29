@@ -27,6 +27,7 @@ ROOT = Path(__file__).resolve().parents[2]
 COMPOSE_FILE = ROOT / "infra/compose/compose.rehearsal.yaml"
 MIGRATIONS = ROOT / "infra/postgres/migrations"
 FIXTURES = ROOT / "fixtures/postgres"
+CORPUS = ROOT / "fixtures"
 SPEC = ROOT / "docs/specification/SPEC-3.12-Anar-Core-vNext-Authority-Substrate-PRE-FREEZE-HARDENED.md"
 SPEC_SHA256 = "26697bc4a7de4a17272e8f3a47a12d3aec7dee12f2d6bd1f62aaf0d0aff78b80"
 IMAGE_DIGEST = "postgres@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685"
@@ -389,9 +390,14 @@ def main() -> int:
         ROOT / "Cargo.lock",
         ROOT / "governance/authority-invariants.v1.json",
         ROOT / "governance/reason-code-registry.v1.json",
+        ROOT / "governance/repository-map.v1.json",
         ROOT / "governance/sqlstate-registry.v1.json",
+        ROOT / "tools/rehearsal/run_postgres_rehearsal.py",
+        ROOT / "tools/rehearsal/verify_evidence_packet.py",
+        ROOT / "docs/ADR/ADR-004-corpus-manifest-and-undisclosed-adjudication.md",
+        ROOT / "proof/corrections/CORRECTION-012-CORPUS-MANIFEST-COVERAGE.json",
         *sorted(MIGRATIONS.glob("*.sql")),
-        *sorted(path for path in FIXTURES.rglob("*") if path.is_file()),
+        *sorted(path for path in CORPUS.rglob("*") if path.is_file()),
     ]
     evidence_hashes = {str(path.relative_to(ROOT)): sha256_file(path) for path in input_paths}
     evidence_hashes[str(results_path.relative_to(ROOT))] = sha256_file(results_path)
@@ -416,8 +422,20 @@ def main() -> int:
         "policy_digest": sha256_file(ROOT / "governance/authority-invariants.v1.json"),
         "pricing_version": "NOT_APPLICABLE_AUTHORITY_SUBSTRATE",
         "input_corpus_manifest": {
-            str(path.relative_to(ROOT)): evidence_hashes[str(path.relative_to(ROOT))]
-            for path in sorted(path for path in FIXTURES.rglob("*") if path.is_file())
+            "schema": "anarchi.anar-core.fixture-corpus-manifest.v1",
+            "corpus_version": "1.0.0",
+            "reviewer_view": "UNDISCLOSED",
+            "case_ids": [
+                "legitimate-entitled-approved",
+                "formatted-evidence-untrusted-issuer",
+                "commercial-entitlement-absent",
+                "effective-revocation-present",
+                "revocation-snapshot-incomplete",
+            ],
+            "source_digests": {
+                str(path.relative_to(ROOT)): evidence_hashes[str(path.relative_to(ROOT))]
+                for path in sorted(path for path in CORPUS.rglob("*") if path.is_file())
+            },
         },
         "evidence_hashes": evidence_hashes,
         "decision_trace": {
