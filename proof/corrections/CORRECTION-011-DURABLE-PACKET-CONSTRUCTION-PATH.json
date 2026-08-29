@@ -1,0 +1,13 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-011",
+  "observation": "The first clean durable run completed every database check and teardown, wrote database-proof-results.json, then failed before packet and receipt emission because the durable-only Python packet path used lowercase true instead of True.",
+  "affected_invariant": "A successful rehearsal is not a successful transition until the complete evidence packet and transition receipt are emitted and independently verified.",
+  "result": "DATABASE_PROOF_PRESERVED_PACKET_AND_RECEIPT_NOT_EMITTED",
+  "failing_run_id": "anar-core-phase0-postgres-20260829T154759Z-39f1d88a",
+  "failing_results_sha256": "a101941aabf0167a3be830d4981d4c21d605a7e460c1befa5808dc9324e7fc82",
+  "correction": "Corrected the Python boolean literals and changed development mode to build the complete packet and receipt in a temporary ignored directory, invoke the offline verifier, and remove the temporary directory before passing.",
+  "regression_assertion": "Both development and durable modes must report offline_packet_verification PASS; the preserved failing directory is explicitly ineligible as a transition receipt.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}

@@ -17,6 +17,7 @@ import secrets
 import socket
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -360,12 +361,15 @@ def main() -> int:
         raise RehearsalFailure("rehearsal teardown did not prove zero remaining containers")
     results["checks"]["teardown"] = "PASS"
 
+    temporary_output: tempfile.TemporaryDirectory[str] | None = None
     if args.development:
-        print(json.dumps(results, indent=2, sort_keys=True))
-        return 0
-
-    output_dir = (args.output_dir or ROOT / "proof/rehearsals" / run_id).resolve()
-    output_dir.mkdir(parents=True, exist_ok=False)
+        temporary_parent = ROOT / ".tmp"
+        temporary_parent.mkdir(parents=True, exist_ok=True)
+        temporary_output = tempfile.TemporaryDirectory(prefix="anar-core-rehearsal-", dir=temporary_parent)
+        output_dir = Path(temporary_output.name).resolve()
+    else:
+        output_dir = (args.output_dir or ROOT / "proof/rehearsals" / run_id).resolve()
+        output_dir.mkdir(parents=True, exist_ok=False)
     results_path = output_dir / "database-proof-results.json"
     results_path.write_bytes(canonical_bytes(results) + b"\n")
 
@@ -432,10 +436,10 @@ def main() -> int:
         "action_payload_hash": action_payload_sha256,
         "action_integrity": {
             "payload_hash_algorithm": "lowercase SHA-256 over UTF-8 sorted-key no-whitespace JSON",
-            "grant_target_digest_compared_under_row_lock": true,
-            "grant_effect_scope_hash_compared_under_row_lock": true,
-            "mutated_payload_denied": true,
-            "concurrent_grant_reuse_denied": true,
+            "grant_target_digest_compared_under_row_lock": True,
+            "grant_effect_scope_hash_compared_under_row_lock": True,
+            "mutated_payload_denied": True,
+            "concurrent_grant_reuse_denied": True,
         },
         "external_action_receipt": "NOT_APPLICABLE_NO_EXTERNAL_ACTION",
         "payment_evidence": "NOT_APPLICABLE_AUTHORITY_SUBSTRATE",
@@ -491,6 +495,28 @@ def main() -> int:
     }
     manifest_path = output_dir / "artifact-hashes.json"
     manifest_path.write_bytes(canonical_bytes(artifact_manifest) + b"\n")
+    verification = command(
+        [sys.executable, str(ROOT / "tools/rehearsal/verify_evidence_packet.py"), str(output_dir)],
+        env=os.environ.copy(),
+    )
+    verification_report = json.loads(verification.stdout.decode("utf-8"))
+    if verification_report.get("result") != "PASS":
+        raise RehearsalFailure(f"emitted evidence packet did not verify: {verification_report}")
+    if args.development:
+        print(
+            json.dumps(
+                {
+                    "development_results": results,
+                    "packet_construction": "PASS",
+                    "offline_packet_verification": verification_report,
+                },
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        if temporary_output is not None:
+            temporary_output.cleanup()
+        return 0
     print(json.dumps({"run_id": run_id, "output_dir": str(output_dir), "receipt_hash_sha256": receipt_hash}, indent=2))
     return 0
 

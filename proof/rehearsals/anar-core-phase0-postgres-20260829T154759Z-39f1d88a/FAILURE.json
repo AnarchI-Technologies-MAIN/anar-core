@@ -1,0 +1,12 @@
+{
+  "schema": "anarchi.rehearsal-failure.v1",
+  "run_id": "anar-core-phase0-postgres-20260829T154759Z-39f1d88a",
+  "source_commit": "0038c7bb0e5db712538fe1fb1b91a4d59bf94763",
+  "database_proof_results_sha256": "a101941aabf0167a3be830d4981d4c21d605a7e460c1befa5808dc9324e7fc82",
+  "database_rehearsal_result": "PASS_WITH_TEARDOWN",
+  "evidence_packet_result": "FAILED_NOT_EMITTED",
+  "failure": "Python NameError in action_integrity packet construction: lowercase true was not defined",
+  "eligible_as_transition_receipt": false,
+  "production_mutated": false,
+  "historical_artifacts_rewritten": false
+}
