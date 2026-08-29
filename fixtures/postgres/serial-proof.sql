@@ -77,6 +77,37 @@ $proof$;
 
 DO $proof$
 BEGIN
+    BEGIN
+        INSERT INTO anar_core.decisions
+        SELECT
+            '70000000-0000-4000-8000-000000000099'::uuid,
+            '80000000-0000-4000-8000-000000000099'::uuid,
+            request_id,
+            'phase0.request-binding-smuggle',
+            principal_id, organization_id, membership_id, authenticator_id,
+            authority_context_id, purpose_code, capability_id, capability_version,
+            cal_semantic_hash, outcome, reason_codes,
+            decode(repeat('99', 32), 'hex'),
+            evaluation_snapshot_hash, policy_bundle_hash, evidence_bundle_hash,
+            dependency_bundle_hash, principal_generation, organization_generation,
+            membership_generation, authenticator_generation,
+            authority_context_generation, 99, 99,
+            principal_global_revocation_epoch, organization_revocation_epoch,
+            issued_at_epoch_ms
+        FROM anar_core.decisions
+        WHERE decision_id = '70000000-0000-4000-8000-000000000001';
+        RAISE EXCEPTION 'immutable request mismatch was not denied';
+    EXCEPTION WHEN SQLSTATE 'AR003' THEN
+        NULL;
+    END;
+    IF EXISTS (SELECT 1 FROM anar_core.decisions WHERE idempotency_key = 'phase0.request-binding-smuggle') THEN
+        RAISE EXCEPTION 'immutable request mismatch persisted a decision';
+    END IF;
+END;
+$proof$;
+
+DO $proof$
+BEGIN
     UPDATE anar_core.authority_dependency_state SET generation = 4
      WHERE dependency_id = '60000000-0000-4000-8000-000000000001';
     BEGIN

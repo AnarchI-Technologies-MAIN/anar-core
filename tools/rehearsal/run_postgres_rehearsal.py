@@ -261,6 +261,7 @@ def main() -> int:
                 "sequence_exhaustion": "PASS",
                 "witness_byte_hash_match": "PASS",
                 "payload_mutation_denial": "PASS",
+                "immutable_request_binding_denial": "PASS",
             }
         )
         results["primary_witness_sha256"] = witness_sha256
@@ -272,15 +273,18 @@ def main() -> int:
                 "AUTHORITY_BINDING_DENIED_WRONG_TENANT",
                 "SEQUENCE_EXHAUSTED",
                 "MUTATION_TARGET_DIGEST_MISMATCH",
+                "IMMUTABLE_REQUEST_BINDING_DENIED",
             ]
         )
 
-        def rls_count(organization_id: str | None) -> int:
+        def rls_count(table: str, organization_id: str | None) -> int:
+            if table not in {"organizations", "entitlement_bindings"}:
+                raise RehearsalFailure(f"unregistered RLS proof table: {table}")
             setting = "" if organization_id is None else f"SET LOCAL anar.organization_id = '{organization_id}';"
             sql = (
                 "BEGIN; SET LOCAL ROLE anar_core_runtime; "
                 + setting
-                + " SELECT count(*) FROM anar_core.organizations; ROLLBACK;"
+                + f" SELECT count(*) FROM anar_core.{table}; ROLLBACK;"
             )
             output = psql_bytes(sql.encode(), quiet=True).stdout.decode().strip().splitlines()
             numeric = [line for line in output if line.strip().isdigit()]
@@ -288,10 +292,16 @@ def main() -> int:
                 raise RehearsalFailure(f"unexpected RLS count output: {output}")
             return int(numeric[0])
 
-        if rls_count(None) != 0 or rls_count("20000000-0000-4000-8000-000000000001") != 1:
+        if rls_count("organizations", None) != 0 or rls_count(
+            "organizations", "20000000-0000-4000-8000-000000000001"
+        ) != 1:
             raise RehearsalFailure("RLS did not fail closed for absent or selected organization")
-        if rls_count("20000000-0000-4000-8000-000000000002") != 1:
+        if rls_count("organizations", "20000000-0000-4000-8000-000000000002") != 1:
             raise RehearsalFailure("RLS selected-organization projection is incorrect")
+        if rls_count("entitlement_bindings", None) != 0:
+            raise RehearsalFailure("entitlement RLS did not fail closed without tenant context")
+        if rls_count("entitlement_bindings", "20000000-0000-4000-8000-000000000001") != 1:
+            raise RehearsalFailure("entitlement RLS leaked or omitted tenant state")
         results["checks"]["tenant_rls"] = "PASS"
 
         unauthorized = psql_bytes(
@@ -381,7 +391,7 @@ def main() -> int:
         ROOT / "governance/reason-code-registry.v1.json",
         ROOT / "governance/sqlstate-registry.v1.json",
         *sorted(MIGRATIONS.glob("*.sql")),
-        *sorted(FIXTURES.glob("*.sql")),
+        *sorted(path for path in FIXTURES.rglob("*") if path.is_file()),
     ]
     evidence_hashes = {str(path.relative_to(ROOT)): sha256_file(path) for path in input_paths}
     evidence_hashes[str(results_path.relative_to(ROOT))] = sha256_file(results_path)
@@ -407,7 +417,7 @@ def main() -> int:
         "pricing_version": "NOT_APPLICABLE_AUTHORITY_SUBSTRATE",
         "input_corpus_manifest": {
             str(path.relative_to(ROOT)): evidence_hashes[str(path.relative_to(ROOT))]
-            for path in sorted(FIXTURES.glob("*.sql"))
+            for path in sorted(path for path in FIXTURES.rglob("*") if path.is_file())
         },
         "evidence_hashes": evidence_hashes,
         "decision_trace": {

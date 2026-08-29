@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -30,10 +32,30 @@ def main() -> int:
     manifest = json.loads((packet_dir / "artifact-hashes.json").read_text(encoding="utf-8"))
 
     failures: list[str] = []
+    resolved_from_source_commit = 0
+    source_commit = packet.get("repository_commit", "")
+    if not re.fullmatch(r"[0-9a-f]{40}", source_commit):
+        failures.append("repository commit format")
     for relative, expected in manifest["artifacts"].items():
-        path = root / relative
-        if not path.is_file() or sha256_file(path) != expected:
+        relative_path = Path(relative)
+        if relative_path.is_absolute() or ".." in relative_path.parts:
             failures.append(relative)
+            continue
+        path = root / relative
+        if path.is_file() and sha256_file(path) == expected:
+            continue
+        if not relative.startswith("proof/rehearsals/") and re.fullmatch(r"[0-9a-f]{40}", source_commit):
+            historical = subprocess.run(
+                ["git", "show", f"{source_commit}:{relative}"],
+                cwd=root,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+            if historical.returncode == 0 and hashlib.sha256(historical.stdout).hexdigest() == expected:
+                resolved_from_source_commit += 1
+                continue
+        failures.append(relative)
 
     receipt_hash = receipt.pop("receipt_hash_sha256")
     if hashlib.sha256(canonical_bytes(receipt)).hexdigest() != receipt_hash:
@@ -53,6 +75,7 @@ def main() -> int:
         "packet_dir": str(packet_dir),
         "artifact_count": len(manifest["artifacts"]),
         "receipt_hash_sha256": receipt_hash,
+        "resolved_from_source_commit_count": resolved_from_source_commit,
         "production_authority": packet["final_state"]["production_authority"],
         "failures": failures,
         "result": "PASS" if not failures else "FAIL",
@@ -63,4 +86,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

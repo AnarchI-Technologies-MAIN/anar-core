@@ -1,0 +1,88 @@
+{
+  "schema": "anarchi.anar-core.pipeline-prerequisite-cases.v1",
+  "corpus_version": "1.0.0",
+  "ground_truth_is_not_aggregate_score": true,
+  "reviewer_view": "UNDISCLOSED",
+  "cases": [
+    {
+      "case_id": "legitimate-entitled-approved",
+      "label": "UNDISCLOSED",
+      "expected": {
+        "outcome": "ALLOW",
+        "reason_code": "CURRENT_AUTHORITY_PROVEN"
+      },
+      "facts": {
+        "policy_digest_matches": true,
+        "revocation_snapshot_complete": true,
+        "entitlement_current": true,
+        "evidence_verified": true,
+        "trust_resolved": true,
+        "revocation_clear": true
+      }
+    },
+    {
+      "case_id": "formatted-evidence-untrusted-issuer",
+      "label": "UNDISCLOSED",
+      "expected": {
+        "outcome": "DENY",
+        "reason_code": "INSUFFICIENT_EVIDENCE"
+      },
+      "facts": {
+        "policy_digest_matches": true,
+        "revocation_snapshot_complete": true,
+        "entitlement_current": true,
+        "evidence_verified": false,
+        "trust_resolved": false,
+        "revocation_clear": true
+      }
+    },
+    {
+      "case_id": "commercial-entitlement-absent",
+      "label": "UNDISCLOSED",
+      "expected": {
+        "outcome": "DENY",
+        "reason_code": "INSUFFICIENT_ENTITLEMENT"
+      },
+      "facts": {
+        "policy_digest_matches": true,
+        "revocation_snapshot_complete": true,
+        "entitlement_current": false,
+        "evidence_verified": true,
+        "trust_resolved": true,
+        "revocation_clear": true
+      }
+    },
+    {
+      "case_id": "effective-revocation-present",
+      "label": "UNDISCLOSED",
+      "expected": {
+        "outcome": "DENY",
+        "reason_code": "TRUST_OR_REVOCATION_DENIED"
+      },
+      "facts": {
+        "policy_digest_matches": true,
+        "revocation_snapshot_complete": true,
+        "entitlement_current": true,
+        "evidence_verified": true,
+        "trust_resolved": true,
+        "revocation_clear": false
+      }
+    },
+    {
+      "case_id": "revocation-snapshot-incomplete",
+      "label": "UNDISCLOSED",
+      "expected": {
+        "outcome": "DENY",
+        "reason_code": "TRUST_OR_REVOCATION_DENIED"
+      },
+      "facts": {
+        "policy_digest_matches": true,
+        "revocation_snapshot_complete": false,
+        "entitlement_current": true,
+        "evidence_verified": true,
+        "trust_resolved": true,
+        "revocation_clear": true
+      }
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 
 pub mod canonical;
 pub mod dependency;
+pub mod domain;
 pub mod ids;
 pub mod lattice;
 pub mod money;
@@ -10,6 +11,11 @@ pub mod parser;
 pub use canonical::{SemanticDigest, domain_hash};
 pub use dependency::{
     AuthorityDependencyRef, AuthorityDependencyType, AuthorityStatus, DependencyBundle,
+};
+pub use domain::{
+    BindingStatus, EntitlementBindingSnapshot, ExternalRevocationFactSnapshot,
+    ExternalStateAssertionSnapshot, ExternalTrustFactSnapshot, MembershipClass, PrincipalKind,
+    ValidityWindow,
 };
 pub use ids::{RegisteredId, StableId};
 pub use lattice::{

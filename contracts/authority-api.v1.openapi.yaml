@@ -5,6 +5,7 @@ info:
   description: >-
     Pre-freeze contract. This file defines a testable interface and does not
     assert that a production endpoint exists or is authorized.
+x-production-authority: NONE
 servers: []
 paths:
   /v1/authority-contexts:
@@ -66,4 +67,85 @@ paths:
               schema:
                 $ref: ./decision-receipt.v1.schema.json
         "404": {description: Unavailable without tenant-existence disclosure}
-
+  /v1/delegations:
+    post:
+      operationId: createDelegation
+      responses:
+        "201": {description: Narrowed delegation created after current delegator authority proof}
+        "400": {description: Typed scope, time, use, or delegation constraint rejected}
+        "403": {description: Current delegable authority not established}
+        "409": {description: Authority changed before mutation finalization}
+  /v1/delegations/{delegation_id}/revoke:
+    post:
+      operationId: revokeDelegation
+      parameters:
+        - name: delegation_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Delegation revoked and authority generation advanced atomically}
+        "403": {description: Administrative authority not established}
+        "404": {description: Unavailable without tenant-existence disclosure}
+  /v1/elevations/request:
+    post:
+      operationId: requestPurposeBoundElevation
+      responses:
+        "201": {description: Bounded purpose-specific elevation created from an authorized grant}
+        "400": {description: Purpose, reason, expiry, use, or scope binding rejected}
+        "403": {description: Issuer authority not established}
+        "409": {description: Authority changed before mutation finalization}
+  /v1/elevations/{elevation_id}/revoke:
+    post:
+      operationId: revokeElevation
+      parameters:
+        - name: elevation_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Elevation revoked through a one-shot authorized mutation}
+        "403": {description: Administrative authority not established}
+        "404": {description: Unavailable without tenant-existence disclosure}
+  /v1/assertions:
+    post:
+      operationId: createExternalStateAssertion
+      responses:
+        "201": {description: Assertion recorded with exact object, payload, issuer, and provenance digests}
+        "400": {description: Typed assertion or issuer-class contract rejected}
+        "403": {description: Assertion issuance authority not established}
+        "409": {description: Assertion conflicts with current immutable state}
+  /v1/assertions/{assertion_id}/revoke:
+    post:
+      operationId: revokeExternalStateAssertion
+      parameters:
+        - name: assertion_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Assertion revoked and dependency state advanced atomically}
+        "403": {description: Assertion revocation authority not established}
+        "404": {description: Unavailable without tenant-existence disclosure}
+  /v1/organizations/{organization_id}/memberships:
+    get:
+      operationId: listOrganizationMemberships
+      parameters:
+        - name: organization_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Tenant-isolated membership projections}
+        "404": {description: Unavailable without tenant-existence disclosure}
+  /v1/organizations/{organization_id}/units:
+    get:
+      operationId: listOrganizationUnits
+      parameters:
+        - name: organization_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Tenant-isolated organization unit projections}
+        "404": {description: Unavailable without tenant-existence disclosure}

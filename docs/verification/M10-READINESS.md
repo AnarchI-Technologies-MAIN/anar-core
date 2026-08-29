@@ -19,6 +19,10 @@ This record describes current proof coverage. It is not a deployment approval, p
 | Exact registered-asset money parsing without floats | Unit proven |
 | Complete typed capability lattice comparisons | Unit proven |
 | Immutable evaluation snapshot | Unit proven |
+| Bounded policy IR with explicit default-deny compilation | Unit proven |
+| Current entitlement and complete revocation snapshot prerequisites | Unit and pipeline proven |
+| Evidence issuer/provenance allowlist and exact object digest checks | Unit and pipeline proven |
+| Trust resolution with effective revocation winning | Unit and pipeline proven |
 | Unknown/stale/unsupported state never becomes allow | Unit proven |
 | Branch-local delegation traversal and semantic-cycle denial | Unit proven |
 | Deterministic in-memory receipt issuance and replay | Unit proven |
@@ -33,6 +37,8 @@ This record describes current proof coverage. It is not a deployment approval, p
 | One-shot internal mutation race | Exactly one winner proven |
 | Payload/target digest mutation after grant | Denied |
 | Mutation generation and revocation-epoch bump with immutable event | PostgreSQL rehearsal proven |
+| Deferred execution requires a valid decision, exact payload, and online high-risk revalidation | Unit proven |
+| Shadow comparison remains dimension-by-dimension without aggregate score | Unit proven |
 | Postgres service state | tmpfs only; teardown proven |
 | Postgres network | internal network and loopback-only host bind proven |
 | Registry or production endpoint contact | None configured or contacted by the runner |
@@ -48,7 +54,7 @@ This record describes current proof coverage. It is not a deployment approval, p
 7. Restore proof, backup policy, operational runbooks, alert delivery, and incident review.
 8. Independent security review and independent evidence adjudication.
 9. Complete M9 adversarial corpus and every milestone family enumerated in SPEC-3.12.
-10. Any production deployment, customer admission, credential transition, or release authorization.
+10. Full undisclosed reviewer adjudication and formally accepted pilot threshold; the prerequisite corpus is evidence input, not a threshold.
+11. Any production deployment, customer admission, credential transition, or release authorization.
 
 No open item is converted into a pass by this rehearsal.
-

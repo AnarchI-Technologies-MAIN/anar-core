@@ -121,6 +121,10 @@ pub enum ReasonCode {
     InvalidGenerationState,
     InvalidTimeWindow,
     DependencyVectorInvalid,
+    PolicyDigestMismatch,
+    InsufficientEntitlement,
+    InsufficientEvidence,
+    TrustOrRevocationDenied,
 }
 
 impl ReasonCode {
@@ -146,6 +150,10 @@ impl ReasonCode {
             Self::InvalidGenerationState => "INVALID_GENERATION_STATE",
             Self::InvalidTimeWindow => "INVALID_TIME_WINDOW",
             Self::DependencyVectorInvalid => "DEPENDENCY_VECTOR_INVALID",
+            Self::PolicyDigestMismatch => "POLICY_DIGEST_MISMATCH",
+            Self::InsufficientEntitlement => "INSUFFICIENT_ENTITLEMENT",
+            Self::InsufficientEvidence => "INSUFFICIENT_EVIDENCE",
+            Self::TrustOrRevocationDenied => "TRUST_OR_REVOCATION_DENIED",
         }
     }
 }
@@ -333,7 +341,7 @@ fn candidate(
     }
 }
 
-fn denied(
+pub(crate) fn denied(
     input: &EvaluationInput,
     reason: ReasonCode,
     dependency_bundle: DependencyBundle,
