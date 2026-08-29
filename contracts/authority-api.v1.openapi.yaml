@@ -1,0 +1,69 @@
+openapi: 3.1.0
+info:
+  title: Anar-Core vNext Authority API
+  version: 0.3.12-pre.1
+  description: >-
+    Pre-freeze contract. This file defines a testable interface and does not
+    assert that a production endpoint exists or is authorized.
+servers: []
+paths:
+  /v1/authority-contexts:
+    post:
+      operationId: createAuthorityContext
+      responses:
+        "201": {description: Fresh bounded authority context created}
+        "403": {description: Current identity or membership not established}
+        "409": {description: Stale or contradictory current state}
+  /v1/authority-contexts/{authority_context_id}/revoke:
+    post:
+      operationId: revokeAuthorityContext
+      parameters:
+        - name: authority_context_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204": {description: Context revoked through an authorized mutation path}
+        "403": {description: Administrative authority not established}
+  /v1/decisions/evaluate:
+    post:
+      operationId: evaluateCapability
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./authority-request.v1.schema.json
+      responses:
+        "200": {description: Material decision and immutable receipt projection}
+        "400": {description: Bounded parser or typed semantic rejection}
+        "409": {description: Authority changed during evaluation or finalization}
+        "503": {description: Authoritative substrate unavailable; no ALLOW issued}
+  /v1/decisions/{decision_id}:
+    get:
+      operationId: getDecision
+      parameters:
+        - name: decision_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200": {description: Decision projection visible within current authority}
+        "404": {description: Unavailable without tenant-existence disclosure}
+  /v1/receipts/{receipt_id}:
+    get:
+      operationId: getReceipt
+      parameters:
+        - name: receipt_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "200":
+          description: Immutable receipt projection
+          content:
+            application/json:
+              schema:
+                $ref: ./decision-receipt.v1.schema.json
+        "404": {description: Unavailable without tenant-existence disclosure}
+

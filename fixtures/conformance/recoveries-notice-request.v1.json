@@ -1,0 +1,31 @@
+{
+  "authority_context_id": "00112233-4455-6677-8899-aabbccddeeff",
+  "organization_id": "10112233-4455-6677-8899-aabbccddeeff",
+  "purpose": "recoveries.notice",
+  "capability": {
+    "id": "recoveries.notice.send",
+    "version": 1,
+    "cal_semantic_hash": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "resource_scope": {
+    "kind": "EXPLICIT_SET",
+    "resources": ["recovery:opp_123"]
+  },
+  "effect_scope": {
+    "classes": ["external.communication"]
+  },
+  "constraints": {
+    "max_uses": 1,
+    "financial": null,
+    "expires_at_epoch_ms": 1788030000000,
+    "delegation_allowed": false,
+    "max_delegation_depth": 0
+  },
+  "evidence_refs": [
+    {
+      "assertion_id": "20112233-4455-6677-8899-aabbccddeeff",
+      "object_digest": "2222222222222222222222222222222222222222222222222222222222222222"
+    }
+  ]
+}
+

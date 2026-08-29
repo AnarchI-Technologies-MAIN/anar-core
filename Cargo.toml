@@ -1,0 +1,27 @@
+[workspace]
+members = [
+    "crates/anar-core-types",
+    "crates/anar-core-engine",
+    "crates/anar-core-runtime",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+license = "LicenseRef-AnarchI-Proprietary"
+rust-version = "1.98"
+version = "0.3.12-pre.1"
+
+[workspace.dependencies]
+hex = "=0.4.3"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+sha2 = "=0.10.9"
+thiserror = "=2.0.20"
+
+[profile.release]
+panic = "abort"
+overflow-checks = true
+lto = "thin"
+codegen-units = 1
+

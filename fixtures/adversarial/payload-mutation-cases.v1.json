@@ -1,0 +1,13 @@
+{
+  "schema": "anarchi.anar-core.payload-mutation-cases.v1",
+  "cases": [
+    {"id": "wrong-organization", "changed_field": "organization_id", "expected": "FAIL_CLOSED"},
+    {"id": "wrong-purpose", "changed_field": "purpose", "expected": "FAIL_CLOSED"},
+    {"id": "changed-resource", "changed_field": "resource_scope", "expected": "DISTINCT_OR_DENY"},
+    {"id": "changed-effect", "changed_field": "effect_scope", "expected": "DISTINCT_OR_DENY"},
+    {"id": "changed-payload-hash", "changed_field": "cal_semantic_hash", "expected": "DISTINCT_OR_DENY"},
+    {"id": "changed-policy", "changed_field": "policy_bundle_hash", "expected": "DISTINCT_RECEIPT"},
+    {"id": "expired-context", "changed_field": "authority_context.expires_at", "expected": "DENY"},
+    {"id": "revoked-membership", "changed_field": "membership.status", "expected": "DENY"}
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-003",
+  "observation": "The first bounded scanner limited decoded keys but could consume an escape-heavy raw key beyond max_key_length_bytes before rejecting it, and it did not count escape tokens globally.",
+  "affected_invariant": "Tokenizer limits must apply before and during allocation and escape decoding.",
+  "result": "AFFECTED_TRANSITION_STOPPED_BEFORE_COMMIT",
+  "correction": "Added a raw key/string byte limit enforced across escape consumption, an explicit max_escape_count budget, and regression fixtures for both paths.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}

@@ -1,0 +1,10 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-002",
+  "observation": "The workspace manifest referenced planned engine and runtime crates before their manifests existed, so Cargo could not isolate the typed-core build.",
+  "affected_invariant": "The repository map and build graph must remain mechanically consistent at every committed transition.",
+  "result": "BUILD_STOPPED_BEFORE_COMPILATION",
+  "correction": "Added non-authoritative crate shells matching the already-declared workspace members.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}

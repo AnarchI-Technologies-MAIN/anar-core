@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:anarchi:anar-core:authority-request:v1",
+  "title": "Anar-Core normalized authority request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_context_id",
+    "organization_id",
+    "purpose",
+    "capability",
+    "resource_scope",
+    "effect_scope",
+    "constraints",
+    "evidence_refs"
+  ],
+  "properties": {
+    "authority_context_id": {"type": "string", "format": "uuid"},
+    "organization_id": {"type": "string", "format": "uuid"},
+    "purpose": {"type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,127}$"},
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "cal_semantic_hash"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,127}$"},
+        "version": {"type": "integer", "minimum": 1},
+        "cal_semantic_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "resource_scope": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "resources"],
+          "properties": {
+            "kind": {"const": "EXPLICIT_SET"},
+            "resources": {
+              "type": "array",
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {"type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,127}$"}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "segments"],
+          "properties": {
+            "kind": {"const": "HIERARCHY"},
+            "segments": {
+              "type": "array",
+              "maxItems": 128,
+              "items": {"type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,127}$"}
+            }
+          }
+        }
+      ]
+    },
+    "effect_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classes"],
+      "properties": {
+        "classes": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,127}$"}
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_uses",
+        "financial",
+        "expires_at_epoch_ms",
+        "delegation_allowed",
+        "max_delegation_depth"
+      ],
+      "properties": {
+        "max_uses": {"type": ["integer", "null"], "minimum": 1},
+        "financial": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["asset_id", "registry_version", "maximum"],
+              "properties": {
+                "asset_id": {"type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,127}$"},
+                "registry_version": {"type": "integer", "minimum": 1},
+                "maximum": {"type": "string", "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"}
+              }
+            }
+          ]
+        },
+        "expires_at_epoch_ms": {"type": ["integer", "null"]},
+        "delegation_allowed": {"type": "boolean"},
+        "max_delegation_depth": {"type": "integer", "minimum": 0, "maximum": 65535}
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["assertion_id", "object_digest"],
+        "properties": {
+          "assertion_id": {"type": "string", "format": "uuid"},
+          "object_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    }
+  }
+}
+

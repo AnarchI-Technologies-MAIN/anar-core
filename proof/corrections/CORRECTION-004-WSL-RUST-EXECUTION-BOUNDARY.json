@@ -1,0 +1,10 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-004",
+  "observation": "The first workspace-wide offline test invocation resolved through the Windows Rust installation because the repository was addressed through a UNC working directory. The Windows cache did not contain the locked thiserror 2.0.20 package, while the declared WSL2 target cache did.",
+  "affected_invariant": "Verification must execute inside the declared target environment without changing locked dependency versions or contacting a registry.",
+  "result": "AFFECTED_TRANSITION_STOPPED_BEFORE_CODE_EXECUTION",
+  "correction": "Reran cargo format and the complete locked offline workspace suite inside Ubuntu at the same repository commit and dependency lock; all 44 tests passed. Future rehearsal commands enter Ubuntu explicitly.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}
