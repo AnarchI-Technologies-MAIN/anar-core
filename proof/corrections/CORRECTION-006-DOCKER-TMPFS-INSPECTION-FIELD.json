@@ -1,0 +1,10 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-006",
+  "observation": "After the tmpfs ownership correction, Postgres started but the isolation verifier looked for Compose tmpfs entries in Docker's ordinary Mounts array. Docker records these entries in HostConfig.Tmpfs.",
+  "affected_invariant": "Runtime isolation assertions must inspect the engine field that actually carries the tmpfs contract and must fail closed when it is absent.",
+  "result": "AFFECTED_TRANSITION_STOPPED_BEFORE_MIGRATION",
+  "correction": "The verifier now requires /var/lib/postgresql/data in HostConfig.Tmpfs, preserves the ordinary Mounts projection separately, and records every tmpfs destination in the service manifest.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-007",
+  "observation": "The first migration attempt reached 000002 and PostgreSQL rejected the dependency digest IS DISTINCT FROM CASE expression at parse time.",
+  "affected_invariant": "Every migration is transactional, parser-valid, and applied to an empty rehearsal database before any authority operation runs.",
+  "result": "MIGRATION_TRANSACTION_ABORTED_BEFORE_AUTHORITY_OPERATION",
+  "failing_evidence": "syntax error at end of input at the dependency digest CASE comparison",
+  "correction": "Parenthesized the complete CASE value, typed its null branch as bytea, removed the unreachable duplicate decode branch, and retained canonical lowercase digest prevalidation.",
+  "regression_fixture": "The isolated runner reapplies every migration to an empty tmpfs database on every run.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-005",
+  "observation": "The first two isolated Postgres startup attempts stopped before migrations because the hardened tmpfs PGDATA parent was root-owned mode 0700. The pinned Alpine image executes PostgreSQL as uid 70 gid 70 and could not create the pgdata child directory.",
+  "affected_invariant": "Rehearsal state must remain tmpfs-backed and writable only by the pinned service identity; startup failures must retain diagnostic evidence before teardown.",
+  "result": "AFFECTED_TRANSITION_STOPPED_BEFORE_MIGRATION_OR_BUSINESS_OPERATION",
+  "failing_evidence": "mkdir: can't create directory '/var/lib/postgresql/data/pgdata': Permission denied",
+  "correction": "Bound all rehearsal tmpfs mounts to the locally verified pinned-image identity uid 70 gid 70 without relaxing loopback, internal-network, no-pull, noexec, nosuid, or nodev controls. The runner now captures service logs before teardown on startup failure.",
+  "regression_assertion": "Preflight requires the exact uid=70,gid=70 PGDATA tmpfs contract and runtime inspection must still prove tmpfs state.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}

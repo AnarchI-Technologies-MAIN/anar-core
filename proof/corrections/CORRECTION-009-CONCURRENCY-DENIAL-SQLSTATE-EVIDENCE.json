@@ -1,0 +1,11 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-009",
+  "observation": "The concurrent one-shot mutation proof produced exactly one success and one denial, but standard psql error output omitted the registered SQLSTATE AR003 required by the machine verifier.",
+  "affected_invariant": "A concurrency proof must distinguish the expected typed authority denial from an unrelated process failure using durable machine-readable evidence.",
+  "result": "AUTHORITY_BEHAVIOR_CORRECT_EVIDENCE_CLASSIFICATION_STOPPED",
+  "failing_evidence": "one call returned the event id and one returned mutation grant unavailable, stale, consumed, or mismatched without the SQLSTATE prefix",
+  "correction": "Enabled verbose psql error output in both race fixtures so the losing transition proves registered SQLSTATE AR003 while the verifier continues to require exactly one zero exit and one AR003 exit.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}

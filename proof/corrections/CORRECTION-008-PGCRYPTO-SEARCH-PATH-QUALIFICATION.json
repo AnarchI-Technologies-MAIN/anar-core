@@ -1,0 +1,12 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-008",
+  "observation": "The first authority finalization attempt reached witness hashing and stopped because the security-definer function restricts search_path to pg_catalog and anar_core while the pgcrypto digest function is installed in public.",
+  "affected_invariant": "Security-definer routines retain a fixed restricted search path and cryptographic functions resolve to an explicit trusted schema.",
+  "result": "FINALIZATION_TRANSACTION_ABORTED_BEFORE_SEQUENCE_DECISION_OR_RECEIPT_COMMIT",
+  "failing_evidence": "function digest(bytea, unknown) does not exist under the restricted function search_path",
+  "correction": "Qualified the cryptographic call as public.digest without adding public to the security-definer search path.",
+  "regression_fixture": "serial-proof.sql must complete witness hashing and independently recompute the stored witness digest.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}

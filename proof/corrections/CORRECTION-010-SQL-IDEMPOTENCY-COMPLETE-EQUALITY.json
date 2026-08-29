@@ -1,0 +1,11 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-010",
+  "observation": "Post-green audit found that the SQL exact-retry branch compared proof hashes and identifiers but did not explicitly compare every stored decision field. Purpose and CAL semantic hash were also implicit in the authority context rather than explicit in the durable decision witness.",
+  "affected_invariant": "Exact idempotency means equality of every semantic decision input and output; purpose and compiled authority language identity remain explicit and replayable.",
+  "result": "GREEN_DEVELOPMENT_RUN_NOT_PROMOTED_TO_DURABLE_EVIDENCE",
+  "correction": "Added purpose_code and cal_semantic_hash to the durable decision and witness, revalidated both against current authority context state, and expanded retry equality across all identities, capability fields, outcome, reasons, proof hashes, generations, epochs, and issue time.",
+  "regression_fixture": "serial-proof.sql replays the complete input and changes the request semantic hash under the same key; the runner requires identity for the first and AR007 for the second.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}

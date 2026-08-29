@@ -1,0 +1,32 @@
+name: ${ANAR_COMPOSE_PROJECT_NAME:?ANAR_COMPOSE_PROJECT_NAME is required}
+
+services:
+  postgres:
+    image: postgres@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+    pull_policy: never
+    restart: "no"
+    environment:
+      POSTGRES_DB: ${ANAR_PG_DATABASE:?ANAR_PG_DATABASE is required}
+      POSTGRES_USER: ${ANAR_PG_ADMIN_USER:?ANAR_PG_ADMIN_USER is required}
+      POSTGRES_PASSWORD: ${ANAR_PG_ADMIN_PASSWORD:?ANAR_PG_ADMIN_PASSWORD is required}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "127.0.0.1:${ANAR_PG_PORT:?ANAR_PG_PORT is required}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data:rw,nosuid,nodev,noexec,size=512m,mode=0700,uid=70,gid=70
+      - /run/postgresql:rw,nosuid,nodev,noexec,size=16m,mode=0775,uid=70,gid=70
+      - /tmp:rw,nosuid,nodev,noexec,size=32m,mode=1777,uid=70,gid=70
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 1s
+      timeout: 2s
+      retries: 30
+      start_period: 2s
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - rehearsal
+
+networks:
+  rehearsal:
+    internal: true

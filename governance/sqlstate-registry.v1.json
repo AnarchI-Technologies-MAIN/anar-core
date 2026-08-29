@@ -1,0 +1,13 @@
+{
+  "schema": "anarchi.anar-core.sqlstate-registry.v1",
+  "status": "PRE_FREEZE",
+  "codes": {
+    "AR001": "STALE_AUTHORITY_RETRY_REQUIRED",
+    "AR002": "DEPENDENCY_UNAVAILABLE",
+    "AR003": "AUTHORITY_BINDING_DENIED",
+    "AR004": "INVALID_TYPED_INPUT",
+    "AR005": "CONFLICTING_DEPENDENCY_DUPLICATE",
+    "AR006": "SEQUENCE_EXHAUSTED",
+    "AR007": "IDEMPOTENCY_CONFLICT"
+  }
+}
