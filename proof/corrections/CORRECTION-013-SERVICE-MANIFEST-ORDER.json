@@ -1,0 +1,17 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-013",
+  "observation": "The first four-service development run reached healthy services and teardown, but the emitted packet was rejected because the service manifest preserved startup order while the offline verifier requires canonical service order.",
+  "affected_invariant": "A service evidence packet must have one canonical service manifest representation so an independent verifier can compare it without process-order assumptions.",
+  "result": "SERVICE_PACKET_REJECTED_BEFORE_ACCEPTANCE",
+  "observed_verifier_result": {
+    "artifact_count": 19,
+    "failures": ["service manifest"],
+    "receipt_hash_sha256": "6bf48bd5e92e4d8091ae3881bc2b8f6b44c6243c8ec49efc5b1f4cdfea017f0a",
+    "result": "FAIL"
+  },
+  "correction": "Canonicalized the service list as [minio, nats, postgres, zitadel] before emitting results, packet, and verifier expectations.",
+  "regression_assertion": "The service packet verifier accepts only the canonical sorted service list and every future packet must emit that same list in all service-manifest locations.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}

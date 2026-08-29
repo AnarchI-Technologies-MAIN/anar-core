@@ -9,11 +9,11 @@
     {"path": "crates/anar-core-runtime", "owner": "finalization and operational boundaries", "status": "IMPLEMENTED_PROOF_MODEL_ONLY"},
     {"path": "contracts", "owner": "versioned external contracts", "status": "IMPLEMENTED_PRE_FREEZE"},
     {"path": "infra/postgres/migrations", "owner": "authoritative state schema", "status": "IMPLEMENTED_LOCAL_REHEARSAL_PROVEN"},
-    {"path": "infra/compose", "owner": "loopback-only rehearsal", "status": "IMPLEMENTED_LOCAL_REHEARSAL_PROVEN"},
+    {"path": "infra/compose", "owner": "loopback-only PostgreSQL and four-service rehearsal stacks", "status": "IMPLEMENTED_LOCAL_REHEARSAL_PROVEN"},
     {"path": "fixtures/conformance", "owner": "golden semantic fixtures and undisclosed adjudication cases", "status": "ACTIVE_PARTIAL_PREREQUISITE_CORPUS"},
     {"path": "fixtures/adversarial", "owner": "M9 fracture fixtures", "status": "ACTIVE_PARTIAL"},
     {"path": "fixtures/postgres", "owner": "database serialization and mutation fractures", "status": "LOCAL_REHEARSAL_PROVEN"},
-    {"path": "tools/rehearsal", "owner": "isolated runner and offline evidence verifier", "status": "ACTIVE"},
+    {"path": "tools/rehearsal", "owner": "isolated runners and offline evidence verifiers", "status": "ACTIVE_MULTI_SERVICE_DURABLE_PENDING"},
     {"path": "legacy/predecessor", "owner": "preserved migration evidence", "status": "EVIDENCE_ONLY"},
     {"path": "proof", "owner": "transition and verification receipts", "status": "ACTIVE"}
   ]

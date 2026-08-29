@@ -1,0 +1,120 @@
+name: ${ANAR_COMPOSE_PROJECT_NAME:?ANAR_COMPOSE_PROJECT_NAME is required}
+
+services:
+  postgres:
+    image: postgres@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+    pull_policy: never
+    restart: "no"
+    environment:
+      POSTGRES_DB: ${ANAR_STACK_DATABASE:?ANAR_STACK_DATABASE is required}
+      POSTGRES_USER: ${ANAR_STACK_DB_USER:?ANAR_STACK_DB_USER is required}
+      POSTGRES_PASSWORD: ${ANAR_STACK_DB_PASSWORD:?ANAR_STACK_DB_PASSWORD is required}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "127.0.0.1:${ANAR_STACK_PG_PORT:?ANAR_STACK_PG_PORT is required}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data:rw,nosuid,nodev,noexec,size=512m,mode=0700,uid=70,gid=70
+      - /run/postgresql:rw,nosuid,nodev,noexec,size=16m,mode=0775,uid=70,gid=70
+      - /tmp:rw,nosuid,nodev,noexec,size=32m,mode=1777,uid=70,gid=70
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 1s
+      timeout: 2s
+      retries: 40
+      start_period: 2s
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - rehearsal
+
+  nats:
+    image: nats@sha256:d4ac35882ac65aff236cd65b9d3fa4d24332c681e1a85f94eedccd3cdd65b1da
+    pull_policy: never
+    restart: "no"
+    command: ["nats-server", "-js", "-m", "8222", "-sd", "/data"]
+    ports:
+      - "127.0.0.1:${ANAR_STACK_NATS_PORT:?ANAR_STACK_NATS_PORT is required}:4222"
+      - "127.0.0.1:${ANAR_STACK_NATS_MONITOR_PORT:?ANAR_STACK_NATS_MONITOR_PORT is required}:8222"
+    tmpfs:
+      - /data:rw,nosuid,nodev,noexec,size=128m,mode=0700
+      - /tmp:rw,nosuid,nodev,noexec,size=32m,mode=1777
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8222/healthz"]
+      interval: 1s
+      timeout: 2s
+      retries: 40
+      start_period: 2s
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - rehearsal
+
+  minio:
+    image: minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+    pull_policy: never
+    restart: "no"
+    command: ["server", "/data", "--address", ":9000", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${ANAR_STACK_MINIO_USER:?ANAR_STACK_MINIO_USER is required}
+      MINIO_ROOT_PASSWORD: ${ANAR_STACK_MINIO_PASSWORD:?ANAR_STACK_MINIO_PASSWORD is required}
+    ports:
+      - "127.0.0.1:${ANAR_STACK_MINIO_PORT:?ANAR_STACK_MINIO_PORT is required}:9000"
+      - "127.0.0.1:${ANAR_STACK_MINIO_CONSOLE_PORT:?ANAR_STACK_MINIO_CONSOLE_PORT is required}:9001"
+    tmpfs:
+      - /data:rw,nosuid,nodev,noexec,size=256m,mode=0700
+      - /tmp:rw,nosuid,nodev,noexec,size=32m,mode=1777
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 1s
+      timeout: 2s
+      retries: 40
+      start_period: 2s
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - rehearsal
+
+  zitadel:
+    image: ghcr.io/zitadel/zitadel@sha256:4b68a2106f60baa2895e5a00a77fcd915d29d0db3f0c011d3eb9f99f557b2b48
+    pull_policy: never
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      ["start-from-init", "--masterkeyFromEnv", "--tlsMode", "disabled", "--externalDomain", "127.0.0.1", "--externalPort", "8080", "--port", "8080"]
+    environment:
+      ZITADEL_DATABASE_POSTGRES_HOST: postgres
+      ZITADEL_DATABASE_POSTGRES_PORT: "5432"
+      ZITADEL_DATABASE_POSTGRES_DATABASE: ${ANAR_STACK_DATABASE:?ANAR_STACK_DATABASE is required}
+      ZITADEL_DATABASE_POSTGRES_USER_USERNAME: ${ANAR_STACK_DB_USER:?ANAR_STACK_DB_USER is required}
+      ZITADEL_DATABASE_POSTGRES_USER_PASSWORD: ${ANAR_STACK_DB_PASSWORD:?ANAR_STACK_DB_PASSWORD is required}
+      ZITADEL_DATABASE_POSTGRES_USER_SSL_MODE: "disable"
+      ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME: ${ANAR_STACK_DB_USER:?ANAR_STACK_DB_USER is required}
+      ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD: ${ANAR_STACK_DB_PASSWORD:?ANAR_STACK_DB_PASSWORD is required}
+      ZITADEL_DATABASE_POSTGRES_ADMIN_EXISTINGDATABASE: ${ANAR_STACK_DATABASE:?ANAR_STACK_DATABASE is required}
+      ZITADEL_DATABASE_POSTGRES_ADMIN_SSL_MODE: "disable"
+      ZITADEL_MASTERKEY: ${ANAR_STACK_ZITADEL_MASTERKEY:?ANAR_STACK_ZITADEL_MASTERKEY is required}
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME: root@zitadel.localhost
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD: ${ANAR_STACK_ZITADEL_HUMAN_PASSWORD:?ANAR_STACK_ZITADEL_HUMAN_PASSWORD is required}
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORDCHANGEREQUIRED: "false"
+      ZITADEL_EXTERNALSECURE: "false"
+      ZITADEL_EXTERNALPORT: "8080"
+      ZITADEL_EXTERNALDOMAIN: "127.0.0.1"
+      ZITADEL_TLS_ENABLED: "false"
+    ports:
+      - "127.0.0.1:${ANAR_STACK_ZITADEL_PORT:?ANAR_STACK_ZITADEL_PORT is required}:8080"
+    healthcheck:
+      test: ["CMD", "/app/zitadel", "ready"]
+      interval: 2s
+      timeout: 4s
+      retries: 60
+      start_period: 5s
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - rehearsal
+
+networks:
+  rehearsal:
+    internal: true
