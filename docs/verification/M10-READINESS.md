@@ -36,6 +36,7 @@ This record describes current proof coverage. It is not a deployment approval, p
 | Direct runtime-role writes | Denied |
 | One-shot internal mutation race | Exactly one winner proven |
 | Payload/target digest mutation after grant | Denied |
+| Mutation target and grant updates require exact one-row effects | PostgreSQL rehearsal proven |
 | Mutation generation and revocation-epoch bump with immutable event | PostgreSQL rehearsal proven |
 | Deferred execution requires a valid decision, exact payload, and online high-risk revalidation | Unit proven |
 | Shadow comparison remains dimension-by-dimension without aggregate score | Unit proven |

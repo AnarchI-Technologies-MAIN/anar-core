@@ -427,6 +427,7 @@ DECLARE
     v_context anar_core.authority_contexts%ROWTYPE;
     v_decision anar_core.decisions%ROWTYPE;
     v_pre_epoch bigint;
+    v_updated bigint;
 BEGIN
     IF nullif(current_setting('anar.organization_id', true), '')::uuid
        IS DISTINCT FROM p_organization_id
@@ -527,12 +528,24 @@ BEGIN
     UPDATE anar_core.memberships
        SET status = 'REVOKED', generation = generation + 1
      WHERE membership_id = p_target_membership_id;
+    GET DIAGNOSTICS v_updated = ROW_COUNT;
+    IF v_updated <> 1 THEN
+        RAISE EXCEPTION USING ERRCODE = 'AR002', MESSAGE = 'membership mutation affected an unexpected row count';
+    END IF;
     UPDATE anar_core.organizations
        SET revocation_epoch = revocation_epoch + 1
      WHERE organization_id = p_organization_id;
+    GET DIAGNOSTICS v_updated = ROW_COUNT;
+    IF v_updated <> 1 THEN
+        RAISE EXCEPTION USING ERRCODE = 'AR002', MESSAGE = 'organization mutation affected an unexpected row count';
+    END IF;
     UPDATE anar_core.internal_mutation_grants
        SET consumed_at_epoch_ms = p_now_epoch_ms
      WHERE mutation_grant_id = p_mutation_grant_id;
+    GET DIAGNOSTICS v_updated = ROW_COUNT;
+    IF v_updated <> 1 THEN
+        RAISE EXCEPTION USING ERRCODE = 'AR003', MESSAGE = 'mutation grant consumption affected an unexpected row count';
+    END IF;
 
     INSERT INTO anar_core.authority_mutation_events (
         event_id, mutation_grant_id, decision_receipt_id, actor_principal_id,
