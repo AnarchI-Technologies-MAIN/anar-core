@@ -43,7 +43,7 @@ This record describes current proof coverage. It is not a deployment approval, p
 | Postgres service state | tmpfs only; teardown proven |
 | Postgres network | internal network and loopback-only host bind proven |
 | Registry or production endpoint contact | None configured or contacted by the runner |
-| Four-service local readiness (PostgreSQL, NATS/JetStream, MinIO, Zitadel) | Development rehearsal proven; durable packet pending |
+| Four-service local readiness (PostgreSQL, NATS/JetStream, MinIO, Zitadel) | Durable readiness packet proven; business-operation semantics remain open |
 
 ## Still open
 
@@ -57,7 +57,6 @@ This record describes current proof coverage. It is not a deployment approval, p
 8. Independent security review and independent evidence adjudication.
 9. Complete M9 adversarial corpus and every milestone family enumerated in SPEC-3.12.
 10. Full undisclosed reviewer adjudication and formally accepted pilot threshold; the prerequisite corpus is evidence input, not a threshold.
-11. Durable four-service packet and independent review of the service readiness boundary.
-12. Any production deployment, customer admission, credential transition, or release authorization.
+11. Any production deployment, customer admission, credential transition, or release authorization.
 
 No open item is converted into a pass by this rehearsal.
