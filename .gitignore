@@ -1,0 +1,11 @@
+/target/
+/.cache/
+/.tmp/
+*.pyc
+__pycache__/
+.pytest_cache/
+.env
+.env.*
+!.env.example
+proof/runs/current/
+

@@ -1,0 +1,29 @@
+{
+  "schema": "anarchi.anar-core.authority-invariants.v1",
+  "status": "PRE_FREEZE_M10_NOT_READY",
+  "source_spec_sha256": "26697bc4a7de4a17272e8f3a47a12d3aec7dee12f2d6bd1f62aaf0d0aff78b80",
+  "invariants": [
+    {"id": "AC-001", "text": "Unknown, stale, unsupported, contradictory, expired, or revoked authority never defaults to ALLOW."},
+    {"id": "AC-002", "text": "Internal organization_id is the tenant-authority key; provider tenant identifiers are provenance only."},
+    {"id": "AC-003", "text": "Human, agent, service, workload, and device principals are first-class."},
+    {"id": "AC-004", "text": "Roles group bindings; role names are not magical authority."},
+    {"id": "AC-005", "text": "Entitlement, product availability, membership, and runtime authority remain distinct."},
+    {"id": "AC-006", "text": "External assertions may satisfy policy but never grant authority by themselves."},
+    {"id": "AC-007", "text": "Capability, resource, effect, time, use, delegation, evidence, approval, risk, offline, and financial bounds narrow monotonically."},
+    {"id": "AC-008", "text": "Money is parsed from canonical ASCII into exact typed units with registered asset and scale."},
+    {"id": "AC-009", "text": "One bounded parse produces the semantic object used for evaluation, hashing, receipts, and envelopes."},
+    {"id": "AC-010", "text": "Duplicate keys are rejected before JSON normalization or database JSONB ingestion."},
+    {"id": "AC-011", "text": "Delegation traversal is branch-local, cycle-safe, bounded, cross-org explicit, and intersection-only."},
+    {"id": "AC-012", "text": "Every mutable ALLOW dependency is revalidated or covered by a proven monotonic aggregate in finalization."},
+    {"id": "AC-013", "text": "Consequential decisions finalize in the same transaction that assigns synchronization sequences, inserts the decision, and inserts its receipt."},
+    {"id": "AC-014", "text": "Authority-invalidating mutations use the same global lock-class order and bump generations or epochs atomically."},
+    {"id": "AC-015", "text": "Advisory locks do not participate in authority correctness."},
+    {"id": "AC-016", "text": "Deferred and external effects obtain fresh effect-time authority."},
+    {"id": "AC-017", "text": "A previous decision, approval, event, queue admission, token, or signature is not ambient authority."},
+    {"id": "AC-018", "text": "Vault brokers credentials and cryptographic operations but is never an authority source."},
+    {"id": "AC-019", "text": "Operational availability may stop admission but does not rewrite authority semantics."},
+    {"id": "AC-020", "text": "Technical authority never implies legal ownership, office, employment, equity, or signature authority."},
+    {"id": "AC-021", "text": "Production authority remains NONE until separately deployed, reviewed, and admitted."}
+  ]
+}
+

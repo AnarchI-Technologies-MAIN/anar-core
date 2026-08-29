@@ -1,0 +1,19 @@
+{
+  "schema": "anarchi.anar-core.repository-map.v1",
+  "status": "PRE_FREEZE_WORKSPACE",
+  "source_spec_sha256": "26697bc4a7de4a17272e8f3a47a12d3aec7dee12f2d6bd1f62aaf0d0aff78b80",
+  "production_authority": "NONE",
+  "directories": [
+    {"path": "crates/anar-core-types", "owner": "typed authority semantics", "status": "PLANNED"},
+    {"path": "crates/anar-core-engine", "owner": "pure deterministic evaluation", "status": "PLANNED"},
+    {"path": "crates/anar-core-runtime", "owner": "finalization and operational boundaries", "status": "PLANNED"},
+    {"path": "contracts", "owner": "versioned external contracts", "status": "PLANNED"},
+    {"path": "infra/postgres/migrations", "owner": "authoritative state schema", "status": "PLANNED"},
+    {"path": "infra/compose", "owner": "loopback-only rehearsal", "status": "PLANNED"},
+    {"path": "fixtures/conformance", "owner": "golden semantic fixtures", "status": "PLANNED"},
+    {"path": "fixtures/adversarial", "owner": "M9 fracture fixtures", "status": "PLANNED"},
+    {"path": "legacy/predecessor", "owner": "preserved migration evidence", "status": "EVIDENCE_ONLY"},
+    {"path": "proof", "owner": "transition and verification receipts", "status": "ACTIVE"}
+  ]
+}
+

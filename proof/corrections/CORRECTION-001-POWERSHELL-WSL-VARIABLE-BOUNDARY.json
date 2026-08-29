@@ -1,0 +1,10 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-001",
+  "observation": "A PowerShell-to-WSL command stripped the WSL-local shell variable used as the repository target.",
+  "affected_invariant": "Destructive or mutating targets must resolve exactly before execution.",
+  "result": "NO_MUTATION_OCCURRED",
+  "correction": "The retry used the literal resolved WSL path /home/alexg-anarchi/anar-core and a separate existence assertion.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}
