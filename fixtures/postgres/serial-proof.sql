@@ -16,7 +16,7 @@ SELECT * FROM anar_core.finalize_decision_rehearsal(
     decode(repeat('11', 32), 'hex'), 'ALLOW', ARRAY['CURRENT_AUTHORITY_PROVEN'],
     decode(repeat('21', 32), 'hex'), decode(repeat('22', 32), 'hex'),
     decode(repeat('23', 32), 'hex'), decode(repeat('24', 32), 'hex'),
-    decode(repeat('25', 32), 'hex'),
+    decode('dbf2844738f8aecb7d7d48dd17c873941df4d2f2099149044f11729fa44ae1b3', 'hex'),
     '[{"dependency_type":1,"organization_id":"20000000-0000-4000-8000-000000000001","dependency_id":"60000000-0000-4000-8000-000000000001","expected_generation":3,"expected_digest":null,"expected_status":"ACTIVE"}]'::jsonb,
     2, 4, 5, 6, 7, 0, 0, 1800000000000
 );
@@ -39,7 +39,7 @@ BEGIN
         decode(repeat('11', 32), 'hex'), 'ALLOW', ARRAY['CURRENT_AUTHORITY_PROVEN'],
         decode(repeat('21', 32), 'hex'), decode(repeat('22', 32), 'hex'),
         decode(repeat('23', 32), 'hex'), decode(repeat('24', 32), 'hex'),
-        decode(repeat('25', 32), 'hex'),
+        decode('dbf2844738f8aecb7d7d48dd17c873941df4d2f2099149044f11729fa44ae1b3', 'hex'),
         '[{"dependency_type":1,"organization_id":"20000000-0000-4000-8000-000000000001","dependency_id":"60000000-0000-4000-8000-000000000001","expected_generation":3,"expected_digest":null,"expected_status":"ACTIVE"}]'::jsonb,
         2, 4, 5, 6, 7, 0, 0, 1800000000000
     );
@@ -65,7 +65,7 @@ BEGIN
             decode(repeat('11', 32), 'hex'), 'ALLOW', ARRAY['CURRENT_AUTHORITY_PROVEN'],
             decode(repeat('31', 32), 'hex'), decode(repeat('22', 32), 'hex'),
             decode(repeat('23', 32), 'hex'), decode(repeat('24', 32), 'hex'),
-            decode(repeat('25', 32), 'hex'), '[]'::jsonb,
+            decode('dbf2844738f8aecb7d7d48dd17c873941df4d2f2099149044f11729fa44ae1b3', 'hex'), '[]'::jsonb,
             2, 4, 5, 6, 7, 0, 0, 1800000000000
         );
         RAISE EXCEPTION 'changed-input idempotency conflict was not denied';
@@ -89,7 +89,7 @@ BEGIN
             cal_semantic_hash, outcome, reason_codes,
             decode(repeat('99', 32), 'hex'),
             evaluation_snapshot_hash, policy_bundle_hash, evidence_bundle_hash,
-            dependency_bundle_hash, principal_generation, organization_generation,
+            dependency_bundle_hash, dependency_vector, principal_generation, organization_generation,
             membership_generation, authenticator_generation,
             authority_context_generation, 99, 99,
             principal_global_revocation_epoch, organization_revocation_epoch,
@@ -97,7 +97,7 @@ BEGIN
         FROM anar_core.decisions
         WHERE decision_id = '70000000-0000-4000-8000-000000000001';
         RAISE EXCEPTION 'immutable request mismatch was not denied';
-    EXCEPTION WHEN SQLSTATE 'AR003' THEN
+    EXCEPTION WHEN SQLSTATE 'AR001' OR SQLSTATE 'AR003' THEN
         NULL;
     END;
     IF EXISTS (SELECT 1 FROM anar_core.decisions WHERE idempotency_key = 'phase0.request-binding-smuggle') THEN
@@ -213,7 +213,7 @@ BEGIN
             decode(repeat('11', 32), 'hex'), 'ALLOW', ARRAY['CURRENT_AUTHORITY_PROVEN'],
             decode(repeat('71', 32), 'hex'), decode(repeat('72', 32), 'hex'),
             decode(repeat('73', 32), 'hex'), decode(repeat('74', 32), 'hex'),
-            decode(repeat('75', 32), 'hex'),
+            decode('dbf2844738f8aecb7d7d48dd17c873941df4d2f2099149044f11729fa44ae1b3', 'hex'),
             '[{"dependency_type":1,"organization_id":"20000000-0000-4000-8000-000000000001","dependency_id":"60000000-0000-4000-8000-000000000001","expected_generation":3,"expected_digest":null,"expected_status":"ACTIVE"}]'::jsonb,
             2, 4, 5, 6, 7, 0, 0, 1800000000000
         );
@@ -227,6 +227,34 @@ BEGIN
     IF EXISTS (SELECT 1 FROM anar_core.decisions WHERE idempotency_key = 'phase0.sequence-exhaustion') THEN
         RAISE EXCEPTION 'sequence exhaustion persisted a decision';
     END IF;
+END;
+$proof$;
+
+DO $proof$
+BEGIN
+    BEGIN
+        PERFORM * FROM anar_core.finalize_decision_rehearsal(
+            '70000000-0000-0000-0000-000000000010',
+            '80000000-0000-0000-0000-000000000010',
+            '90000000-0000-0000-0000-000000000010',
+            'phase0.dependency-hash-binding',
+            '10000000-0000-4000-8000-000000000001',
+            '20000000-0000-4000-8000-000000000001',
+            '30000000-0000-4000-8000-000000000001',
+            '40000000-0000-4000-8000-000000000001',
+            '50000000-0000-4000-8000-000000000001',
+            'authority.membership.revoke', 1, 'authority.membership.revoke',
+            decode(repeat('11', 32), 'hex'), 'ALLOW', ARRAY['CURRENT_AUTHORITY_PROVEN'],
+            decode(repeat('21', 32), 'hex'), decode(repeat('22', 32), 'hex'),
+            decode(repeat('23', 32), 'hex'), decode(repeat('24', 32), 'hex'),
+            decode(repeat('aa', 32), 'hex'),
+            '[{"dependency_type":1,"organization_id":"20000000-0000-4000-8000-000000000001","dependency_id":"60000000-0000-4000-8000-000000000001","expected_generation":3,"expected_digest":null,"expected_status":"ACTIVE"}]'::jsonb,
+            2, 4, 5, 6, 7, 0, 0, 1800000000000
+        );
+        RAISE EXCEPTION 'dependency vector/hash mismatch was not denied';
+    EXCEPTION WHEN SQLSTATE 'AR007' THEN
+        NULL;
+    END;
 END;
 $proof$;
 
@@ -265,6 +293,67 @@ BEGIN
     IF (SELECT status FROM anar_core.memberships WHERE membership_id = '30000000-0000-4000-8000-000000000001') <> 'ACTIVE' THEN
         RAISE EXCEPTION 'denied mutation changed membership';
     END IF;
+END;
+$proof$;
+
+DO $proof$
+BEGIN
+    UPDATE anar_core.authority_dependency_state
+       SET generation = 4
+     WHERE dependency_id = '60000000-0000-4000-8000-000000000001';
+    BEGIN
+        PERFORM anar_core.execute_membership_revocation(
+            'b0000000-0000-0000-0000-000000000010',
+            'a0000000-0000-4000-8000-000000000001',
+            '10000000-0000-4000-8000-000000000001',
+            '20000000-0000-4000-8000-000000000001',
+            '30000000-0000-4000-8000-000000000001',
+            decode(repeat('61', 32), 'hex'),
+            'authority.membership.revoke', decode(repeat('62', 32), 'hex'),
+            1800000002000
+        );
+        RAISE EXCEPTION 'effect-time dependency staleness was not denied';
+    EXCEPTION WHEN SQLSTATE 'AR001' OR SQLSTATE 'AR003' THEN
+        NULL;
+    END;
+    UPDATE anar_core.authority_dependency_state
+       SET generation = 3
+     WHERE dependency_id = '60000000-0000-4000-8000-000000000001';
+END;
+$proof$;
+
+INSERT INTO anar_core.internal_mutation_grants (
+    mutation_grant_id, decision_receipt_id, actor_principal_id, organization_id,
+    capability_id, target_type, target_ref, target_digest, purpose_code,
+    effect_scope_hash, issued_at_epoch_ms, expires_at_epoch_ms
+) VALUES (
+    'a0000000-0000-4000-8000-000000000010',
+    '80000000-0000-4000-8000-000000000001',
+    '10000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000001',
+    'authority.membership.revoke', 'membership',
+    '30000000-0000-4000-8000-000000000001',
+    decode(repeat('61', 32), 'hex'), 'authority.membership.revoke',
+    decode(repeat('62', 32), 'hex'), 1800000000000, 2000000000000
+);
+
+DO $proof$
+BEGIN
+    BEGIN
+        PERFORM anar_core.execute_membership_revocation(
+            'b0000000-0000-0000-0000-000000000010',
+            'a0000000-0000-4000-8000-000000000010',
+            '10000000-0000-4000-8000-000000000001',
+            '20000000-0000-4000-8000-000000000001',
+            '30000000-0000-4000-8000-000000000001',
+            decode(repeat('61', 32), 'hex'),
+            'authority.membership.revoke', decode(repeat('62', 32), 'hex'),
+            1900000000000
+        );
+        RAISE EXCEPTION 'expired decision receipt was not denied';
+    EXCEPTION WHEN SQLSTATE 'AR003' THEN
+        NULL;
+    END;
 END;
 $proof$;
 

@@ -1,5 +1,91 @@
 BEGIN;
 
+CREATE OR REPLACE FUNCTION anar_core.canonical_dependency_vector(p_vector jsonb)
+RETURNS bytea
+LANGUAGE plpgsql
+IMMUTABLE
+STRICT
+SET search_path = pg_catalog, anar_core
+AS $function$
+DECLARE
+    v_dependency record;
+    v_record bytea;
+    v_output bytea := int4send(0);
+    v_count integer := 0;
+BEGIN
+    IF jsonb_typeof(p_vector) IS DISTINCT FROM 'array' THEN
+        RAISE EXCEPTION USING ERRCODE = 'AR004', MESSAGE = 'dependency vector must be an array';
+    END IF;
+
+    FOR v_dependency IN
+        SELECT DISTINCT ON (dependency_type, nullif(organization_id, '')::uuid, dependency_id)
+               dependency_type,
+               nullif(organization_id, '')::uuid AS organization_id,
+               dependency_id,
+               expected_generation,
+               expected_digest,
+               expected_status
+          FROM jsonb_to_recordset(p_vector) AS dependency(
+              dependency_type smallint,
+              organization_id text,
+              dependency_id uuid,
+              expected_generation bigint,
+              expected_digest text,
+              expected_status text
+          )
+         ORDER BY dependency_type, nullif(organization_id, '')::uuid NULLS FIRST,
+                  dependency_id, to_jsonb(dependency)::text
+    LOOP
+        v_count := v_count + 1;
+        v_record := decode(lpad(to_hex(v_dependency.dependency_type::integer), 2, '0'), 'hex')
+            || decode(replace(v_dependency.dependency_id::text, '-', ''), 'hex')
+            || CASE WHEN v_dependency.organization_id IS NULL
+                    THEN decode('00', 'hex')
+                    ELSE decode('01', 'hex')
+                         || decode(replace(v_dependency.organization_id::text, '-', ''), 'hex')
+               END
+            || CASE WHEN v_dependency.expected_generation IS NULL
+                    THEN decode('00', 'hex')
+                    ELSE decode('01', 'hex') || int8send(v_dependency.expected_generation)
+               END
+            || CASE WHEN v_dependency.expected_digest IS NULL
+                    THEN decode('00', 'hex')
+                    ELSE decode('01', 'hex') || decode(v_dependency.expected_digest, 'hex')
+               END
+            || CASE WHEN v_dependency.expected_status IS NULL
+                    THEN decode('00', 'hex')
+                    ELSE decode('01', 'hex') || decode(
+                             CASE v_dependency.expected_status
+                                 WHEN 'ACTIVE' THEN '01'
+                                 WHEN 'SUSPENDED' THEN '02'
+                                 WHEN 'REVOKED' THEN '03'
+                                 WHEN 'EXPIRED' THEN '04'
+                             END, 'hex')
+               END;
+        v_output := v_output || int4send(octet_length(v_record)) || v_record;
+    END LOOP;
+
+    v_output := int4send(v_count) || substring(v_output FROM 5);
+    RETURN v_output;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION anar_core.dependency_bundle_digest(p_vector jsonb)
+RETURNS bytea
+LANGUAGE sql
+IMMUTABLE
+STRICT
+SET search_path = pg_catalog, anar_core
+AS $function$
+    SELECT public.digest(
+        int8send(octet_length(convert_to('ANAR-AUTHORITY-DEPENDENCY-BUNDLE-1', 'UTF8')))
+        || convert_to('ANAR-AUTHORITY-DEPENDENCY-BUNDLE-1', 'UTF8')
+        || int8send(octet_length(anar_core.canonical_dependency_vector(p_vector)))
+        || anar_core.canonical_dependency_vector(p_vector),
+        'sha256'
+    )
+$function$;
+
 CREATE OR REPLACE FUNCTION anar_core.revalidate_dependency_vector(p_vector jsonb)
 RETURNS void
 LANGUAGE plpgsql
@@ -9,8 +95,6 @@ AS $function$
 DECLARE
     v_dependency record;
     v_current record;
-    v_count bigint;
-    v_distinct_count bigint;
 BEGIN
     IF jsonb_typeof(p_vector) IS DISTINCT FROM 'array' THEN
         RAISE EXCEPTION USING ERRCODE = 'AR004', MESSAGE = 'dependency vector must be an array';
@@ -32,20 +116,20 @@ BEGIN
         RAISE EXCEPTION USING ERRCODE = 'AR004', MESSAGE = 'dependency vector contains an unknown field or non-object entry';
     END IF;
 
-    SELECT count(*),
-           count(DISTINCT concat_ws(':', dependency_type::text, coalesce(organization_id, ''), dependency_id::text))
-      INTO v_count, v_distinct_count
-      FROM jsonb_to_recordset(p_vector) AS dependency(
-          dependency_type smallint,
-          organization_id text,
-          dependency_id uuid,
-          expected_generation bigint,
-          expected_digest text,
-          expected_status text
-      );
-
-    IF v_count IS DISTINCT FROM v_distinct_count THEN
-        RAISE EXCEPTION USING ERRCODE = 'AR005', MESSAGE = 'dependency vector contains duplicate semantic keys';
+    IF EXISTS (
+        SELECT 1
+          FROM jsonb_to_recordset(p_vector) AS dependency(
+              dependency_type smallint,
+              organization_id text,
+              dependency_id uuid,
+              expected_generation bigint,
+              expected_digest text,
+              expected_status text
+          )
+         GROUP BY dependency_type, nullif(organization_id, '')::uuid, dependency_id
+        HAVING count(DISTINCT to_jsonb(dependency)) > 1
+    ) THEN
+        RAISE EXCEPTION USING ERRCODE = 'AR005', MESSAGE = 'dependency vector contains conflicting duplicate semantic keys';
     END IF;
 
     FOR v_dependency IN
@@ -68,6 +152,8 @@ BEGIN
         IF v_dependency.dependency_type IS NULL
            OR v_dependency.dependency_id IS NULL
            OR v_dependency.dependency_type NOT BETWEEN 1 AND 8
+           OR (v_dependency.expected_status IS NOT NULL
+               AND v_dependency.expected_status NOT IN ('ACTIVE', 'SUSPENDED', 'REVOKED', 'EXPIRED'))
            OR (v_dependency.expected_generation IS NULL
                AND v_dependency.expected_digest IS NULL
                AND v_dependency.expected_status IS NULL)
@@ -159,6 +245,8 @@ DECLARE
     v_existing anar_core.decisions%ROWTYPE;
     v_principal_sequence bigint;
     v_organization_sequence bigint;
+    v_dependency_bundle_hash bytea;
+    v_receipt_expires_at_epoch_ms bigint;
     v_witness jsonb;
     v_witness_sha256 bytea;
 BEGIN
@@ -313,6 +401,14 @@ BEGIN
     END IF;
 
     PERFORM anar_core.revalidate_dependency_vector(p_dependency_vector);
+    v_dependency_bundle_hash := anar_core.dependency_bundle_digest(p_dependency_vector);
+    IF v_dependency_bundle_hash IS DISTINCT FROM p_dependency_bundle_hash THEN
+        RAISE EXCEPTION USING ERRCODE = 'AR007', MESSAGE = 'dependency vector does not match dependency bundle hash';
+    END IF;
+    v_receipt_expires_at_epoch_ms := LEAST(
+        v_context.expires_at_epoch_ms,
+        v_authenticator.expires_at_epoch_ms
+    );
 
     IF v_principal_sequence >= 9223372036854775806
        OR v_organization_sequence >= 9223372036854775806
@@ -340,18 +436,18 @@ BEGIN
         organization_generation, membership_generation, authenticator_generation,
         authority_context_generation, principal_global_sequence,
         organization_decision_sequence, principal_global_revocation_epoch,
-        organization_revocation_epoch, issued_at_epoch_ms
+        organization_revocation_epoch, issued_at_epoch_ms, dependency_vector
     ) VALUES (
         p_decision_id, p_receipt_id, p_request_id, p_idempotency_key, p_principal_id,
         p_organization_id, p_membership_id, p_authenticator_id, p_authority_context_id,
         p_purpose_code, p_capability_id, p_capability_version, p_cal_semantic_hash,
         p_outcome, p_reason_codes,
         p_request_semantic_hash, p_evaluation_snapshot_hash, p_policy_bundle_hash,
-        p_evidence_bundle_hash, p_dependency_bundle_hash, v_principal.generation,
+        p_evidence_bundle_hash, v_dependency_bundle_hash, v_principal.generation,
         v_organization.generation, v_membership.generation, v_authenticator.generation,
         v_context.generation, v_principal_sequence,
         v_organization_sequence, v_principal.global_revocation_epoch,
-        v_organization.revocation_epoch, p_issued_at_epoch_ms
+        v_organization.revocation_epoch, p_issued_at_epoch_ms, p_dependency_vector
     );
 
     v_witness := jsonb_build_object(
@@ -374,7 +470,8 @@ BEGIN
         'evaluation_snapshot_hash', encode(p_evaluation_snapshot_hash, 'hex'),
         'policy_bundle_hash', encode(p_policy_bundle_hash, 'hex'),
         'evidence_bundle_hash', encode(p_evidence_bundle_hash, 'hex'),
-        'dependency_bundle_hash', encode(p_dependency_bundle_hash, 'hex'),
+        'dependency_bundle_hash', encode(v_dependency_bundle_hash, 'hex'),
+        'dependency_vector', p_dependency_vector,
         'principal_generation', v_principal.generation,
         'organization_generation', v_organization.generation,
         'membership_generation', v_membership.generation,
@@ -385,16 +482,17 @@ BEGIN
         'principal_global_revocation_epoch', v_principal.global_revocation_epoch,
         'organization_revocation_epoch', v_organization.revocation_epoch,
         'issued_at_epoch_ms', p_issued_at_epoch_ms,
+        'valid_until_epoch_ms', v_receipt_expires_at_epoch_ms,
         'production_mutated', false
     );
     v_witness_sha256 := public.digest(convert_to(v_witness::text, 'UTF8'), 'sha256');
 
     INSERT INTO anar_core.decision_receipts (
         receipt_id, decision_id, organization_id, canonical_receipt,
-        canonical_receipt_sha256, created_at_epoch_ms
+        canonical_receipt_sha256, created_at_epoch_ms, expires_at_epoch_ms
     ) VALUES (
         p_receipt_id, p_decision_id, p_organization_id, v_witness,
-        v_witness_sha256, p_issued_at_epoch_ms
+        v_witness_sha256, p_issued_at_epoch_ms, v_receipt_expires_at_epoch_ms
     );
 
     RETURN QUERY SELECT p_decision_id, p_receipt_id, v_principal_sequence,
@@ -428,6 +526,7 @@ DECLARE
     v_decision anar_core.decisions%ROWTYPE;
     v_pre_epoch bigint;
     v_updated bigint;
+    v_receipt_expires_at_epoch_ms bigint;
 BEGIN
     IF nullif(current_setting('anar.organization_id', true), '')::uuid
        IS DISTINCT FROM p_organization_id
@@ -441,6 +540,9 @@ BEGIN
       FROM anar_core.decision_receipts AS r
       JOIN anar_core.decisions AS d ON d.decision_id = r.decision_id
      WHERE r.receipt_id = v_grant.decision_receipt_id;
+    SELECT expires_at_epoch_ms INTO v_receipt_expires_at_epoch_ms
+      FROM anar_core.decision_receipts
+     WHERE receipt_id = v_grant.decision_receipt_id;
 
     IF v_grant.mutation_grant_id IS NULL
        OR v_decision.decision_id IS NULL
@@ -485,6 +587,8 @@ BEGIN
     END IF;
 
     IF v_decision.outcome IS DISTINCT FROM 'ALLOW'
+       OR v_receipt_expires_at_epoch_ms IS NULL
+       OR v_receipt_expires_at_epoch_ms <= p_now_epoch_ms
        OR v_decision.principal_id IS DISTINCT FROM p_actor_principal_id
        OR v_decision.organization_id IS DISTINCT FROM p_organization_id
        OR v_decision.capability_id IS DISTINCT FROM v_grant.capability_id
@@ -517,6 +621,13 @@ BEGIN
     THEN
         RAISE EXCEPTION USING ERRCODE = 'AR003', MESSAGE = 'mutation grant unavailable, stale, consumed, or mismatched';
     END IF;
+
+    IF anar_core.dependency_bundle_digest(v_decision.dependency_vector)
+       IS DISTINCT FROM v_decision.dependency_bundle_hash
+    THEN
+        RAISE EXCEPTION USING ERRCODE = 'AR003', MESSAGE = 'decision dependency receipt binding is invalid';
+    END IF;
+    PERFORM anar_core.revalidate_dependency_vector(v_decision.dependency_vector);
 
     IF v_organization.revocation_epoch >= 9223372036854775806
        OR v_membership.generation >= 9223372036854775806

@@ -258,6 +258,9 @@ def main() -> int:
                 "exact_idempotent_replay": "PASS",
                 "changed_input_conflict": "PASS",
                 "dependency_revalidation": "PASS",
+                "dependency_vector_receipt_binding": "PASS",
+                "effect_time_dependency_freshness": "PASS",
+                "sql_receipt_expiry_parity": "PASS",
                 "wrong_tenant_denial": "PASS",
                 "sequence_exhaustion": "PASS",
                 "witness_byte_hash_match": "PASS",
@@ -275,6 +278,9 @@ def main() -> int:
                 "SEQUENCE_EXHAUSTED",
                 "MUTATION_TARGET_DIGEST_MISMATCH",
                 "IMMUTABLE_REQUEST_BINDING_DENIED",
+                "DEPENDENCY_VECTOR_RECEIPT_BINDING_DENIED",
+                "EFFECT_TIME_DEPENDENCY_STALE_DENIED",
+                "EXPIRED_SQL_RECEIPT_DENIED",
             ]
         )
 

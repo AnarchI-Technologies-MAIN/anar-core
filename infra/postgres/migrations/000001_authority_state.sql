@@ -94,6 +94,7 @@ CREATE TABLE anar_core.decisions (
     policy_bundle_hash bytea NOT NULL CHECK (octet_length(policy_bundle_hash) = 32),
     evidence_bundle_hash bytea NOT NULL CHECK (octet_length(evidence_bundle_hash) = 32),
     dependency_bundle_hash bytea NOT NULL CHECK (octet_length(dependency_bundle_hash) = 32),
+    dependency_vector jsonb NOT NULL,
     principal_generation bigint NOT NULL CHECK (principal_generation >= 0),
     organization_generation bigint NOT NULL CHECK (organization_generation >= 0),
     membership_generation bigint NOT NULL CHECK (membership_generation >= 0),
@@ -115,7 +116,8 @@ CREATE TABLE anar_core.decision_receipts (
     organization_id uuid NOT NULL REFERENCES anar_core.organizations(organization_id),
     canonical_receipt jsonb NOT NULL,
     canonical_receipt_sha256 bytea NOT NULL CHECK (octet_length(canonical_receipt_sha256) = 32),
-    created_at_epoch_ms bigint NOT NULL
+    created_at_epoch_ms bigint NOT NULL,
+    expires_at_epoch_ms bigint NOT NULL CHECK (expires_at_epoch_ms > created_at_epoch_ms)
 );
 
 CREATE TABLE anar_core.internal_mutation_grants (
