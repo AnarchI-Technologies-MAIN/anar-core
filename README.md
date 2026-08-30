@@ -1,12 +1,12 @@
 # Anar-Core vNext
 
-This repository is the isolated, pre-freeze implementation workspace for the Anar-Core current-authority substrate described by SPEC-3.12.
+This repository is the isolated implementation workspace for the Anar-Core current-authority substrate described by the frozen SPEC-3.12 baseline.
 
 ## Current authority state
 
 ```text
-SPECIFICATION        PRE-FREEZE HARDENED
-IMPLEMENTATION       IN PROGRESS
+SPECIFICATION        FROZEN SPEC-3.12 BASELINE
+IMPLEMENTATION       CONDITIONAL PASS
 M10 HARD FREEZE      NOT READY
 PRODUCTION AUTHORITY NONE
 PRODUCTION MUTATION  NONE
