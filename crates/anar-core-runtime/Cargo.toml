@@ -28,3 +28,7 @@ optional = true
 version = "1.47.1"
 features = ["macros", "rt-multi-thread"]
 optional = true
+
+[[example]]
+name = "sqlx_probe"
+required-features = ["postgres"]
