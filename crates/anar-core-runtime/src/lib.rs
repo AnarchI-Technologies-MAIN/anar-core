@@ -18,3 +18,6 @@ pub use vault::{
     ConnectionLease, HealthState, LeasedDbCredential, PoolGenerationMetadata, RiskAdmission,
     RotationFailure, RotationSupervisor, SecretBytes, VaultRuntimeError,
 };
+
+#[cfg(feature = "postgres")]
+pub mod postgres;
