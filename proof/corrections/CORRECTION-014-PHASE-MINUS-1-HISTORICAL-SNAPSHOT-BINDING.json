@@ -1,0 +1,18 @@
+{
+  "schema": "anarchi.corrective-transition-receipt.v1",
+  "correction_id": "CORRECTION-014",
+  "observation": "The Phase -1 verifier compared immutable historical artifact hashes against the moving current checkout, causing legitimate repository-map evolution to appear as historical receipt corruption.",
+  "affected_invariant": "A historical transition receipt must verify the exact committed source tree that produced it; later repository state must not be substituted for those historical bytes.",
+  "result": "HISTORICAL_SNAPSHOT_BINDING_RECONCILED",
+  "original_receipt_path": "proof/phase-minus-1/PHASE-MINUS-1-INSTITUTIONAL-RECONCILIATION-RECEIPT.json",
+  "original_receipt_hash": "e08281c2b4fdf2db7f5a6d543b7eeac52e7d1735d0ba632bc72ffd1e263f1ecd",
+  "original_receipt_file_sha256": "0dc96b3c642eb558bd71f05c30b5e237a36afa17cb2dbb19b035e4c2604541b5",
+  "original_source_commit_marker": "GENESIS_NO_PREVIOUS_COMMIT",
+  "historical_source_commit": "31c9d1929a28617c712412d719c81107fda777b7",
+  "historical_source_tree": "9627b610d6a4a0ba140d4d1e2edab0a7e0ef7750",
+  "artifact_count": 10,
+  "correction": "Resolve every Phase -1 artifact from the bound root transition commit, require the preserved receipt bytes to be identical in that tree, require the commit to remain an ancestor of HEAD, and verify the recorded tree identity before accepting any artifact hash.",
+  "regression_assertion": "Verification must fail closed when the historical commit or tree is unavailable, the original receipt changes, any bound artifact differs, the commit is not an ancestor of HEAD, or current HEAD bytes are substituted for historical bytes.",
+  "production_mutated": false,
+  "historical_receipts_rewritten": false
+}

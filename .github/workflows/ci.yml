@@ -1,0 +1,61 @@
+name: Anar-Core CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anar-core-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust-ci:
+    name: rust-ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository with complete evidence history
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install 1.98.0 --profile minimal --component rustfmt,clippy
+          rustup default 1.98.0
+
+      - name: Verify formatting
+        run: cargo fmt --all --check
+
+      - name: Deny Clippy warnings
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      - name: Run complete Rust workspace tests
+        run: cargo test --workspace --all-targets --locked
+
+  proof-integrity:
+    name: proof-integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository with complete evidence history
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify Phase -1 historical snapshot binding
+        run: python3 tools/proof/verify_phase_minus_one.py
+
+      - name: Verify latest PostgreSQL evidence packet
+        run: python3 tools/rehearsal/verify_evidence_packet.py proof/rehearsals/anar-core-phase0-postgres-20260829T164007Z-29907930
+
+      - name: Verify latest four-service evidence packet
+        run: python3 tools/rehearsal/verify_service_packet.py proof/rehearsals/anar-core-phase0-services-20260829T163557Z-d2149562
