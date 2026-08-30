@@ -19,7 +19,7 @@ pub async fn finalize_with_sqlx(
     authority_context_id: StableId,
 ) -> Result<DecisionReceipt, sqlx::Error> {
     let mut tx = connection.begin().await?;
-    let row = sqlx::query("SELECT * FROM anar_core.finalize_decision_rehearsal(,,,,,,,,,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8)")
+    let row = sqlx::query("SELECT * FROM anar_core.finalize_decision_rehearsal($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28)")
         .bind(Uuid::from_bytes(*material.decision_id.as_bytes())).bind(Uuid::from_bytes(*material.receipt_id.as_bytes())).bind(Uuid::from_bytes(*candidate.request_id.as_bytes()))
         .bind(idempotency_key).bind(Uuid::from_bytes(*candidate.principal_id.as_bytes())).bind(Uuid::from_bytes(*candidate.organization_id.as_bytes()))
         .bind(Uuid::from_bytes(*candidate.membership_id.as_bytes())).bind(Uuid::from_bytes(*candidate.authenticator_id.as_bytes())).bind(Uuid::from_bytes(*authority_context_id.as_bytes()))
