@@ -4,7 +4,7 @@
   "source_spec_sha256": "26697bc4a7de4a17272e8f3a47a12d3aec7dee12f2d6bd1f62aaf0d0aff78b80",
   "production_authority": "NONE",
   "directories": [
-    {"path": ".github/workflows", "owner": "continuous Rust and proof-integrity verification", "status": "IMPLEMENTED_CI_PENDING_REQUIRED_BRANCH_RULE"},
+    {"path": ".github/workflows", "owner": "continuous Rust and proof-integrity verification", "status": "ACTIVE_REQUIRED_BRANCH_RULE"},
     {"path": "crates/anar-core-types", "owner": "typed authority semantics", "status": "IMPLEMENTED_UNIT_PROVEN"},
     {"path": "crates/anar-core-engine", "owner": "pure deterministic evaluation and prerequisite pipeline", "status": "IMPLEMENTED_UNIT_AND_PIPELINE_PROVEN"},
     {"path": "crates/anar-core-runtime", "owner": "finalization and operational boundaries", "status": "IMPLEMENTED_PROOF_MODEL_ONLY"},
