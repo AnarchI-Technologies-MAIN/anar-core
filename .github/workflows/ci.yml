@@ -41,7 +41,7 @@ jobs:
         run: cargo test --workspace --all-targets --locked
 
       - name: Compile SQLx PostgreSQL persistence seam
-        run: cargo check -p anar-core-runtime --features postgres --locked
+        run: cargo check -p anar-core-runtime --features postgres --example sqlx_probe --locked
 
   proof-integrity:
     name: proof-integrity
