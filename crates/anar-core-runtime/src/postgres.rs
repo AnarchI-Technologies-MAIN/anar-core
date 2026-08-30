@@ -19,7 +19,7 @@ pub async fn finalize_with_sqlx(
     authority_context_id: StableId,
 ) -> Result<DecisionReceipt, sqlx::Error> {
     let mut tx = connection.begin().await?;
-    let row = sqlx::query("SELECT * FROM anar_core.finalize_decision_rehearsal($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28)")
+    let row = sqlx::query("SELECT * FROM anar_core.finalize_decision_rehearsal($1::uuid,$2::uuid,$3::uuid,$4::text,$5::uuid,$6::uuid,$7::uuid,$8::uuid,$9::uuid,$10::text,$11::integer,$12::text,$13::bytea,$14::text,$15::text[],$16::bytea,$17::bytea,$18::bytea,$19::bytea,$20::bytea,$21::jsonb,$22::bigint,$23::bigint,$24::bigint,$25::bigint,$26::bigint,$27::bigint,$28::bigint,$29::bigint)")
         .bind(Uuid::from_bytes(*material.decision_id.as_bytes())).bind(Uuid::from_bytes(*material.receipt_id.as_bytes())).bind(Uuid::from_bytes(*candidate.request_id.as_bytes()))
         .bind(idempotency_key).bind(Uuid::from_bytes(*candidate.principal_id.as_bytes())).bind(Uuid::from_bytes(*candidate.organization_id.as_bytes()))
         .bind(Uuid::from_bytes(*candidate.membership_id.as_bytes())).bind(Uuid::from_bytes(*candidate.authenticator_id.as_bytes())).bind(Uuid::from_bytes(*authority_context_id.as_bytes()))
